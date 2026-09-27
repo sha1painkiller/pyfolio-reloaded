@@ -200,5 +200,7 @@ def get_turnover(positions, transactions, denominator="AGB"):
 
     denom.index = denom.index.normalize()
     turnover = traded_value.div(denom, axis="index")
-    turnover = turnover.fillna(0)
+    # With no transactions the traded value is object dtype, which pandas 3 no
+    # longer downcasts on fillna.
+    turnover = turnover.astype("float64").fillna(0)
     return turnover

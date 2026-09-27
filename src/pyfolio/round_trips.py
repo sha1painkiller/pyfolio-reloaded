@@ -136,7 +136,9 @@ def _groupby_consecutive(txn, max_delta=pd.Timedelta("8h")):
         t["order_sign"] = t.amount > 0
         t["block_dir"] = (t.order_sign.shift(1) != t.order_sign).astype(int).cumsum()
         t["block_time"] = ((t.dt.sub(t.dt.shift(1))) > max_delta).astype(int).cumsum()
-        grouped_price = t.groupby(["block_dir", "block_time"]).apply(vwap)
+        grouped_price = t.groupby(["block_dir", "block_time"]).apply(
+            vwap, include_groups=False
+        )
         grouped_price.name = "price"
         grouped_rest = t.groupby(["block_dir", "block_time"]).agg(
             {"amount": "sum", "symbol": "first", "dt": "first"}

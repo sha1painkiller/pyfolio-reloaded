@@ -320,7 +320,7 @@ def plot_holdings(returns, positions, legend_loc="best", ax=None, **kwargs):
 
     positions = positions.copy().drop("cash", axis="columns")
     df_holdings = positions.replace(0, np.nan).count(axis=1)
-    df_holdings_by_month = df_holdings.resample("1M").mean()
+    df_holdings_by_month = df_holdings.resample("1ME").mean()
     df_holdings.plot(color="steelblue", alpha=0.6, lw=0.5, ax=ax, **kwargs)
     df_holdings_by_month.plot(color="orangered", lw=2, ax=ax, **kwargs)
     ax.axhline(df_holdings.values.mean(), color="steelblue", ls="--", lw=3)
@@ -664,6 +664,9 @@ def show_perf_stats(
             date_rows["Total months"] = int(len(returns) / APPROX_BDAYS_PER_MONTH)
         perf_stats = pd.DataFrame(perf_stats_all, columns=["Backtest"])
 
+    # The percentage stats are replaced by formatted strings below; pandas 3
+    # refuses to write strings into a float column.
+    perf_stats = perf_stats.astype(object)
     for column in perf_stats.columns:
         for stat, value in perf_stats[column].items():
             if stat in STAT_FUNCS_PCT:
@@ -847,7 +850,7 @@ def plot_rolling_returns(
                 is_returns,
                 len(oos_cum_returns),
                 cone_std=cone_std,
-                starting_value=is_cum_returns[-1],
+                starting_value=is_cum_returns.iloc[-1],
             )
 
             cone_bounds = cone_bounds.set_index(oos_cum_returns.index)
@@ -1462,7 +1465,7 @@ def plot_turnover(
     ax.yaxis.set_major_formatter(FuncFormatter(y_axis_formatter))
 
     df_turnover = txn.get_turnover(positions, transactions, turnover_denom)
-    df_turnover_by_month = df_turnover.resample("M").mean()
+    df_turnover_by_month = df_turnover.resample("ME").mean()
     df_turnover.plot(color="steelblue", alpha=1.0, lw=0.5, ax=ax, **kwargs)
     df_turnover_by_month.plot(color="orangered", alpha=0.5, lw=2, ax=ax, **kwargs)
     ax.axhline(df_turnover.mean(), color="steelblue", linestyle="--", lw=3, alpha=1.0)
@@ -1813,7 +1816,7 @@ def plot_monthly_returns_timeseries(returns, ax=None, **kwargs):
     if ax is None:
         ax = plt.gca()
 
-    monthly_rets = returns.resample("M").apply(lambda x: cumulate_returns(x))
+    monthly_rets = returns.resample("ME").apply(lambda x: cumulate_returns(x))
     monthly_rets = monthly_rets.to_period()
 
     sns.barplot(x=monthly_rets.index, y=monthly_rets.values, color="steelblue")
